@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProperties = exports.digitSum = exports.isArmstrong = exports.isPerfect = exports.isPrime = void 0;
+exports.isValidInteger = exports.getProperties = exports.digitSum = exports.isArmstrong = exports.isPerfect = exports.isPrime = void 0;
 const isPrime = (num) => {
     if (num <= 1)
         return false;
@@ -31,17 +31,21 @@ const isPerfect = (num) => {
 };
 exports.isPerfect = isPerfect;
 const isArmstrong = (num) => {
-    const digits = num.toString().split("");
+    if (num < 0)
+        return false;
+    const digits = Math.abs(num).toString().split("");
     const power = digits.length;
     const sum = digits.reduce((acc, digit) => acc + Math.pow(parseInt(digit), power), 0);
     return sum === num;
 };
 exports.isArmstrong = isArmstrong;
 const digitSum = (num) => {
-    return Math.abs(num)
+    const isNegative = num < 0;
+    const sum = Math.abs(num)
         .toString()
         .split("")
         .reduce((acc, digit) => acc + parseInt(digit), 0);
+    return isNegative ? -sum : sum;
 };
 exports.digitSum = digitSum;
 const getProperties = (num) => {
@@ -52,6 +56,21 @@ const getProperties = (num) => {
         properties.push("even");
     else
         properties.push("odd");
+    if (num > 0)
+        properties.push("positive");
+    else if (num < 0)
+        properties.push("negative");
+    else
+        properties.push("zero");
     return properties;
 };
 exports.getProperties = getProperties;
+const isValidInteger = (input) => {
+    const validIntegerPattern = /^-?\d+$/;
+    if (!validIntegerPattern.test(input)) {
+        return false;
+    }
+    const num = Number(input);
+    return Number.isSafeInteger(num);
+};
+exports.isValidInteger = isValidInteger;

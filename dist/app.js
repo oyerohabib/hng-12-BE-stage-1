@@ -43,19 +43,31 @@ app.get("/api/classify-number", (req, res, next) => {
                     message: "Number parameter is required",
                 });
             }
-            const number = parseInt(numberStr);
-            // Check if the input is a valid integer
-            if (isNaN(number) || !Number.isInteger(number)) {
+            // Validate if it's a proper integer
+            if (!(0, utils_1.isValidInteger)(numberStr)) {
                 return res.status(400).json({
                     number: numberStr,
                     error: true,
-                    message: "Invalid number provided",
+                    message: "Invalid number format. Please provide a valid integer.",
+                });
+            }
+            const number = parseInt(numberStr);
+            // Check for integer overflow
+            if (!Number.isSafeInteger(number)) {
+                return res.status(400).json({
+                    number: numberStr,
+                    error: true,
+                    message: "Number is outside the safe integer range",
                 });
             }
             try {
                 // Fetch fun fact from numbersapi.com
-                const funFactResponse = yield axios_1.default.get(`http://numbersapi.com/${number}/math`);
-                const funFact = funFactResponse.data;
+                const funFactResponse = yield axios_1.default.get(`http://numbersapi.com/${Math.abs(number)}/math`);
+                let funFact = funFactResponse.data;
+                // If it's a negative number, modify the fun fact
+                if (number < 0) {
+                    funFact = funFact.replace(Math.abs(number).toString(), number.toString());
+                }
                 // Calculate all properties
                 const response = {
                     number,
@@ -75,7 +87,9 @@ app.get("/api/classify-number", (req, res, next) => {
                     is_perfect: (0, utils_1.isPerfect)(number),
                     properties: (0, utils_1.getProperties)(number),
                     digit_sum: (0, utils_1.digitSum)(number),
-                    fun_fact: `${number} is a number`, // fallback fun fact
+                    fun_fact: number < 0
+                        ? `${number} is the negative of ${Math.abs(number)}`
+                        : `${number} is a number`,
                 };
                 res.json(response);
             }
