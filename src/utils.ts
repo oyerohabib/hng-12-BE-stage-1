@@ -26,7 +26,9 @@ export const isPerfect = (num: number): boolean => {
 };
 
 export const isArmstrong = (num: number): boolean => {
-  const digits = num.toString().split("");
+  if (num < 0) return false;
+
+  const digits = Math.abs(num).toString().split("");
   const power = digits.length;
   const sum = digits.reduce(
     (acc, digit) => acc + Math.pow(parseInt(digit), power),
@@ -36,10 +38,12 @@ export const isArmstrong = (num: number): boolean => {
 };
 
 export const digitSum = (num: number): number => {
-  return Math.abs(num)
+  const isNegative = num < 0;
+  const sum = Math.abs(num)
     .toString()
     .split("")
     .reduce((acc, digit) => acc + parseInt(digit), 0);
+  return isNegative ? -sum : sum;
 };
 
 export const getProperties = (num: number): string[] => {
@@ -49,5 +53,19 @@ export const getProperties = (num: number): string[] => {
   if (num % 2 === 0) properties.push("even");
   else properties.push("odd");
 
+  if (num > 0) properties.push("positive");
+  else if (num < 0) properties.push("negative");
+  else properties.push("zero");
+
   return properties;
+};
+
+export const isValidInteger = (input: string): boolean => {
+  const validIntegerPattern = /^-?\d+$/;
+  if (!validIntegerPattern.test(input)) {
+    return false;
+  }
+
+  const num = Number(input);
+  return Number.isSafeInteger(num);
 };

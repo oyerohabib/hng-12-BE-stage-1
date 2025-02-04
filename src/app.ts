@@ -2,7 +2,13 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import axios from "axios";
 import dotenv from "dotenv";
-import { isPrime, isPerfect, getProperties, digitSum } from "./utils";
+import {
+  isPrime,
+  isPerfect,
+  getProperties,
+  digitSum,
+  isValidInteger,
+} from "./utils";
 
 dotenv.config();
 
@@ -38,23 +44,40 @@ app.get(
           });
         }
 
-        const number = parseInt(numberStr as string);
-
-        // Check if the input is a valid integer
-        if (isNaN(number) || !Number.isInteger(number)) {
+        // Validate if it's a proper integer
+        if (!isValidInteger(numberStr as string)) {
           return res.status(400).json({
             number: numberStr,
             error: true,
-            message: "Invalid number provided",
+            message: "Invalid number format. Please provide a valid integer.",
+          });
+        }
+
+        const number = parseInt(numberStr as string);
+
+        // Check for integer overflow
+        if (!Number.isSafeInteger(number)) {
+          return res.status(400).json({
+            number: numberStr,
+            error: true,
+            message: "Number is outside the safe integer range",
           });
         }
 
         try {
           // Fetch fun fact from numbersapi.com
           const funFactResponse = await axios.get(
-            `http://numbersapi.com/${number}/math`
+            `http://numbersapi.com/${Math.abs(number)}/math`
           );
-          const funFact = funFactResponse.data;
+          let funFact = funFactResponse.data;
+
+          // If it's a negative number, modify the fun fact
+          if (number < 0) {
+            funFact = funFact.replace(
+              Math.abs(number).toString(),
+              number.toString()
+            );
+          }
 
           // Calculate all properties
           const response = {
@@ -75,7 +98,10 @@ app.get(
             is_perfect: isPerfect(number),
             properties: getProperties(number),
             digit_sum: digitSum(number),
-            fun_fact: `${number} is a number`, // fallback fun fact
+            fun_fact:
+              number < 0
+                ? `${number} is the negative of ${Math.abs(number)}`
+                : `${number} is a number`,
           };
 
           res.json(response);
